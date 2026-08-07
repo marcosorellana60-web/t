@@ -1,1 +1,54 @@
+import sqlite3
+import streamlit as st
 
+# Configuración de la página
+st.set_page_config(page_title="Registro de Usuarios", page_icon="👤")
+
+# Conexión a la base de datos
+conn = sqlite3.connect("usuarios.db", check_same_thread=False)
+cursor = conn.cursor()
+
+# Crear la tabla si no existe
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS usuarios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    apellido TEXT NOT NULL
+)
+""")
+conn.commit()
+
+# Título
+st.title("Registro de Usuarios")
+
+st.write("Complete los datos del usuario.")
+
+# Formulario
+with st.form("registro"):
+    nombre = st.text_input("Nombre")
+    apellido = st.text_input("Apellido")
+
+    guardar = st.form_submit_button("Guardar")
+
+    if guardar:
+        if nombre.strip() and apellido.strip():
+            cursor.execute(
+                "INSERT INTO usuarios (nombre, apellido) VALUES (?, ?)",
+                (nombre, apellido)
+            )
+            conn.commit()
+            st.success("Usuario guardado correctamente.")
+        else:
+            st.error("Debe completar todos los campos.")
+
+# Mostrar usuarios registrados
+st.subheader("Usuarios registrados")
+
+cursor.execute("SELECT id, nombre, apellido FROM usuarios")
+usuarios = cursor.fetchall()
+
+if usuarios:
+    for usuario in usuarios:
+        st.write(f"**{usuario[0]}** - {usuario[1]} {usuario[2]}")
+else:
+    st.info("No hay usuarios registrados.")
